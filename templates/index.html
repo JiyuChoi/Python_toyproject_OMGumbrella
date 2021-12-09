@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <!-- Link CSS -->
+    <link rel="stylesheet" href="../static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap"
+          rel="stylesheet">    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+    <script src="https://rawgithub.com/darkskyapp/skycons/master/skycons.js"></script>
+    <title>아 맞다 우산!</title>
+
+    <script>
+        $(document).ready(function () {
+            getTime();
+            getForecast();
+            setInterval(getTime, 1000);
+        });
+
+        function getTime() {
+            let today = new Date()
+            // 오늘 날짜 데이터 형식 변경
+            let year = today.getFullYear();
+            let month = ('0' + (today.getMonth() + 1)).slice(-2);
+            let day = ('0' + today.getDate()).slice(-2);
+
+            let hours = ('0' + today.getHours()).slice(-2);
+            let minutes = ('0' + today.getMinutes()).slice(-2);
+            let seconds = ('0' + today.getSeconds()).slice(-2);
+
+            const clock = document.querySelector(".js-clock");
+            clock.innerHTML = `${year}년 ${month}월 ${day}일 ${hours}시 ${minutes}분 ${seconds}초를 지나는 중입니다`
+
+        }
+
+        function getForecast() {
+            $('.weather-wrapper').empty();
+            let apiURI = "http://api.openweathermap.org/data/2.5/forecast?id=1835848&appid=39c453653738e03164dd449123eb9a3e";
+
+            let today = new Date()
+            // 오늘 날짜 데이터 형식 변경
+            let year = today.getFullYear();
+            let month = ('0' + (today.getMonth() + 1)).slice(-2);
+            let day = ('0' + today.getDate()).slice(-2);
+            let nowDay = year + '-' + month + '-' + day;
+
+            let hours = ('0' + today.getHours()).slice(-2);
+            let minutes = ('0' + today.getMinutes()).slice(-2);
+            let seconds = ('0' + today.getSeconds()).slice(-2);
+
+            let nowTime = hours + ':' + minutes + ':' + seconds;
+
+            $.ajax({
+                url: apiURI,
+                dataType: "json",
+                type: "GET",
+                async: "false",
+                success: function (response) {
+                    let cardCnt = 0;
+                    for (let i = 0; i < response['list'].length; i++) {
+                        // 카드수가 9개이면 정지
+                        if (cardCnt === 9) {
+                            break
+                        }
+
+                        let forecastTime = response['list'][i]['dt_txt'].split(' ')[1];
+                        let forecastDate = response['list'][i]['dt_txt'].split(' ')[0];
+                        let temp = (Math.round(response['list'][i]['main']['temp']) - 273) + "˚C";
+                        if (forecastDate > nowDay || (forecastDate == nowDay && forecastTime > nowTime)) {
+                            cardCnt++;
+                            let weather = response['list'][i]['weather'][0]['main'];
+                            let umbrella = '<p style="color: #30799B">아 맞다! 우산 😲</p>';
+                            if (weather === 'Rain') {
+                                weather = 'rain'
+                            } else {
+                                if (weather === 'Clouds') {
+                                    weather = 'cloud';
+                                    umbrella = '<p>흐림</p>';
+                                } else {
+                                    weather = 'sun';
+                                    umbrella = '<p>맑음</p>';
+                                }
+                            }
+                            const forecastMonth = forecastDate.slice(5, 7) < 10 ? forecastDate.slice(6, 7) : forecastDate.slice(5, 7);
+                            const forecastDay = forecastDate.slice(8, 10) < 10 ? forecastDate.slice(9, 10) : forecastDate.slice(8, 10);
+                            const forecastHour = forecastTime.slice(0, 2) < 10 ? forecastTime.slice(1, 2) : forecastTime.slice(0, 2);
+
+                            let text = `${forecastMonth}월 ${forecastDay}일 ${forecastHour}시는`;
+                            $(".weather-wrapper").append('<div class="weather-card"><div class="weather-icon ' + weather + '"></div><h1>' + temp + '</h1><h4>' + text + '</h4>' + umbrella + '</div>');
+                        }
+                    }
+                }
+            })
+        }
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <div class="jumbotron">
+        <div class="header">
+            <h1 class="display-4">아 맞다 우산!</h1>
+            <p class="lead">당신의 날씨 알리미 <strong>아 맞다 우산!</strong></br> 비가 오기 전, 잊지말고 우산 챙겨서 외출하세요</p>
+            <hr class="my-4">
+            <div class="js-clock clock"></div>
+            <p class="lead2">서울 기준 날씨 예보</p>
+                <button type="button" class="btn btn-primary" onclick="getForecast()">날씨 업데이트</button>
+        </div>
+        <div class="weather-wrapper"></div>
+    </div>
+
+</div>
+
+</body>
+</html>
